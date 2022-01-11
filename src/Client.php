@@ -2,7 +2,7 @@
 
 namespace RouterOS;
 
-use DivineOmega\SSHConnection\SSHConnection;
+//use DivineOmega\SSHConnection\SSHConnection;
 use RouterOS\Exceptions\ClientException;
 use RouterOS\Exceptions\ConnectException;
 use RouterOS\Exceptions\BadCredentialsException;
@@ -575,17 +575,22 @@ class Client implements Interfaces\ClientInterface
     public function export(string $arguments = null): string
     {
         // Connect to remote host
-        $connection =
-            (new SSHConnection())
-                ->timeout($this->config('ssh_timeout'))
-                ->to($this->config('host'))
-                ->onPort($this->config('ssh_port'))
-                ->as($this->config('user') . '+etc') // +etc mean "disable colors"
-                ->withPassword($this->config('pass'))
-                ->connect();
+        $connection = ssh2_connect($this->config('host'), $this->config('ssh_port'));
+        ssh2_auth_password($connection, $this->config('user'), $this->config('pass'));
+
+        //$stream = ssh2_exec($connection, '/usr/local/bin/php -i');
+        
+        //$connection = 
+        //    (new SSHConnection())
+        //        ->timeout($this->config('ssh_timeout'))
+        //        ->to($this->config('host'))
+        //        ->onPort($this->config('ssh_port'))
+        //        ->as($this->config('user') . '+etc') // +etc mean "disable colors"
+        //        ->withPassword($this->config('pass'))
+        //        ->connect();
 
         // Run export command
-        $command = $connection->run('/export' . ' ' . $arguments);
+        $command = $connection->ssh2_exec('/export' . ' ' . $arguments);
 
         // Return the output
         return $command->getOutput();
